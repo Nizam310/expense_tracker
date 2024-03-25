@@ -12,8 +12,8 @@ Future<void> selectDate(
       firstDate: DateTime(2015, 8),
       lastDate: DateTime(2101));
   if (picked != null && picked != selectedDate) {
-    final formattedDate = DateFormat('dd-MM-yyy').format(picked);
+    final formattedDate = DateFormat('dd/MM/yyy').format(picked);
     controller.text = formattedDate;
-    FocusScope.of(Get.context!).nextFocus();
+    FocusScope.of(Get.context!).unfocus();
   }
 }

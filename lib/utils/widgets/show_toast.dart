@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 void showToast(String message) {
-  ScaffoldMessenger.of(Get.context!).showSnackBar(SnackBar(
-    content: Text(message),
-    duration: const Duration(seconds: 2),
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-  ));
+  Fluttertoast.showToast(
+    webPosition:"top",
+      msg: message,
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.TOP_LEFT,
+      timeInSecForIosWeb: 5,
+      backgroundColor: Colors.red,
+      textColor: Colors.white,
+      fontSize: 16.0);
 }

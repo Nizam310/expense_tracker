@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
 
+import 'package:expense_tracker/controller/home_controller.dart';
 import 'package:expense_tracker/model/expense_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
@@ -14,6 +15,11 @@ import 'package:intl/intl.dart';
 import '../utils/widgets/show_toast.dart';
 
 class AddExpenseController extends GetxController {
+  final dateFocusNode = FocusNode();
+  final addButtonFocusNode = FocusNode();
+  final amountFocusNode = FocusNode();
+  final descriptionFocusNode = FocusNode();
+  final homeController = Get.find<HomeController>();
   final amountController = TextEditingController();
 
   final dateController = TextEditingController();
@@ -24,38 +30,43 @@ class AddExpenseController extends GetxController {
 
   DateTime selectedDate = DateTime.now();
 
-  List<ExpenseModel> expenseList = [];
+  RxList<ExpenseModel> expenseList = <ExpenseModel>[].obs;
 
   addExpense() async {
-    /// Checking the given fields are empty or not
-    if (amountController.text.isNotEmpty &&
-        dateController.text.isNotEmpty &&
-        descriptionController.text.isNotEmpty) {
-      expenseList.add(ExpenseModel(
-          amount: double.parse(amountController.text),
-          date: DateFormat('dd-MM-yyy').parse(dateController.text),
-          description: descriptionController.text));
-
-      /// Opening Database
+    if (formKey.currentState!.validate()) {
       var box = await Hive.openBox("expenseBox");
 
-      /// Remove Duplicates from list
-      final reList = expenseList.toSet().toList();
+      /// Retrieve existing list from the database
+      var savedList = box.get("expenseList");
 
-      /// adding the list to db
-      await box.put(
-          "expenseList", jsonEncode(reList.map((e) => e.toJson()).toList()));
+      List<ExpenseModel> expenseList = [];
+      if (savedList != null) {
+        expenseList = List<ExpenseModel>.from(
+            jsonDecode(savedList).map((model) => ExpenseModel.fromJson(model)));
+      }
+
+      expenseList.add(ExpenseModel(
+          amount: double.parse(amountController.text),
+          date: DateFormat('dd/MM/yyy').parse(dateController.text),
+          description: descriptionController.text));
+
+      /// Saving the updated list to the database
+      await box.put("expenseList",
+          jsonEncode(expenseList.map((e) => e.toJson()).toList()));
+      addButtonFocusNode.unfocus();
 
       /// Resetting the text fields
+      amountController.clear();
+      dateController.clear();
+      descriptionController.clear();
 
-      formKey.currentState?.reset();
+      /// this will show the fields in home
+      await homeController.getListFromDb();
+      homeController.update();
 
+      Navigator.pop(Get.context!);
       showToast("Expense added successfully");
       update();
-    } else {
-      /// if the fields are empty then it will show this toast
-
-      showToast("Field must be not empty!");
     }
   }
 
@@ -119,7 +130,6 @@ class AddExpenseController extends GetxController {
         );
         NotificationDetails platformChannelSpecifics = NotificationDetails(
           android: androidPlatformChannelSpecifics,
-
         );
         await flutterLocalNotificationsPlugin.show(
           889,
@@ -137,6 +147,7 @@ class AddExpenseController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    initializeService();
     Hive.registerAdapter(ExpenseModelAdapter());
   }
 }

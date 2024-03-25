@@ -4,17 +4,19 @@ import 'package:get/get.dart';
 class CustomButton extends StatelessWidget {
   final String text;
   final Function() onTap;
-  const CustomButton({super.key, required this.text, required this.onTap});
+  final FocusNode focusNode;
+  const CustomButton({super.key, required this.text, required this.onTap, required this.focusNode});
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return InkWell(
+      focusNode: focusNode,
       onTap: onTap,
 
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-            color: Colors.black, borderRadius: BorderRadius.circular(10)),
+            color: Theme.of(context).colorScheme.primary, borderRadius: BorderRadius.circular(10)),
         child: Center(
             child: Text(
           text,
